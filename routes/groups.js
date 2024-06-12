@@ -4,23 +4,23 @@ const { group, grade } = require("../model/index.js");
 const router = express.Router();
 router.get("/group/:id", async function (req, res) {
   const id = req.params.id;
-  const foundGroup = await group.findOne({ where: { codGroup: id } });
-  if (!foundGroup || foundGroup.length === 0) {
+  const foundGroup = await group.findOne({ where: { groupCode: id } });
+  if (foundGroup === null) {
     res.send("El grupo no existe");
   } else res.json(foundGroup);
 });
 router.get("/group", async function (req, res) {
   const foundGroup = await group.findAll();
   //si el arra foundGroup no tiene nada no responde segun lo esperado
-  if (foundGroup === null) {
+  if (!foundGroup || foundGroup.length === 0) {
     res.send("No existen grupos");
   } else res.json(foundGroup);
 });
 router.post("/group", async function (req, res) {
-  let { codGroup, nameCoordinator, gradeId } = req.body;
+  let { groupCode, nameCoordinator, gradeId } = req.body;
   //Se queda en un error al no tener fk valida, validar que el grado exista
   try {
-    if (!isNaN(codGroup) && !isNaN(gradeId) && nameCoordinator != "") {
+    if (!isNaN(groupCode) && !isNaN(gradeId) && nameCoordinator != "") {
       const id = gradeId.toString();
       const foundGrade = await grade.findOne({ where: { name: id } });
       //ESTA TOMANDO EL 1 COMO VALIDO PERO NO ESTA
@@ -29,10 +29,10 @@ router.post("/group", async function (req, res) {
       if (foundGrade === null) {
         return res.send("El grado ingresado no existe");
       } else {
-        codGroup = codGroup.toString();
+        groupCode = groupCode.toString();
         console.log("Ingreso");
         const [newGroup, succes] = await group.findOrCreate({
-          where: { codGroup, nameCoordinator, gradeId },
+          where: { groupCode, nameCoordinator, gradeId },
         });
         console.log("estado de findOrCreate");
         console.log(succes);
@@ -59,7 +59,7 @@ router.put("/group/:id", async function (req, res) {
   const DATA = req.body;
   console.log(DATA);
   try {
-    const foundGroup = await group.findOne({ where: { codGroup: id } });
+    const foundGroup = await group.findOne({ where: { groupCode: id } });
     if (foundGroup === null) {
       return res.send("El grupo no existe");
     }
@@ -75,7 +75,7 @@ router.put("/group/:id", async function (req, res) {
 router.delete("/group/:id", async function (req, res) {
   const id = req.params.id;
   try {
-    const deletedGroup = await group.destroy({ where: { codGroup: id } });
+    const deletedGroup = await group.destroy({ where: { groupCode: id } });
     if (!deletedGroup) {
       return res.send("El grupo no existe");
     }

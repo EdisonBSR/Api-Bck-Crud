@@ -11,7 +11,7 @@ async function main() {
       force: false,
       models: [student, grade, group],
     });
-    console.log("sequelize sync funcionó correctamente");
+    console.log("sequelize funcionó correctamente");
     app.listen(port);
     console.log("Servidor express iniciado en puerto 3000");
   } catch (error) {

@@ -11,11 +11,11 @@ const group = sequelize.define(
       primaryKey: true,
       allowNull: true,
     },
-    codGroup: {
+    groupCode: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    nameCoordinator: {
+    coordinator: {
       type: DataTypes.STRING,
       allowNull: false,
     },

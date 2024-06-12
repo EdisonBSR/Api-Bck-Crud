@@ -9,7 +9,7 @@ const grade = sequelize.define(
       allowNull: false,
       primaryKey: true,
     },
-    name: {
+    gradeCode: {
       type: DataTypes.STRING,
       allowNull: false,
     },

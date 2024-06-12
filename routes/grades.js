@@ -4,25 +4,25 @@ const router = express.Router();
 router.get("/grade/:id", async function (req, res) {
   //Validar que si es un dato que pueda ser un numero valido
   const id = req.params.id;
-  const foundGrade = await grade.findOne({ where: { name: id } });
-  if (!foundGrade || foundGrade.length === 0) {
+  const foundGrade = await grade.findOne({ where: { gradeCode: id } });
+  if (foundGrade === null) {
     res.send("El grado no existe");
   } else res.json(foundGrade);
 });
 router.get("/grade", async function (req, res) {
   const foundGrade = await grade.findAll();
-  if (foundGrade === null) {
+  if (!foundGrade || foundGrade.length == 0) {
     res.send("No existen grados");
   } else res.json(foundGrade);
 });
 router.post("/grade", async function (req, res) {
-  const num = parseInt(req.body.name);
+  const num = parseInt(req.body.gradeCode);
   console.log(!isNaN(num));
   if (!isNaN(num) && num >= 0 && num <= 11) {
-    const name = num.toString();
+    const gradeCode = num.toString();
     console.log("Ingreso");
     const [newGrade, succes] = await grade.findOrCreate({
-      where: { name },
+      where: { gradeCode },
     });
     if (succes) {
       res.sendStatus(204);
@@ -32,9 +32,9 @@ router.post("/grade", async function (req, res) {
   }
 });
 router.put("/grade", async function (req, res) {
-  let { id, name } = req.body;
+  let { id, gradeCode } = req.body;
   const idNumber = parseInt(id);
-  const nameNumber = parseInt(name);
+  const nameNumber = parseInt(gradeCode);
 
   if (!isNaN(id) && !isNaN(nameNumber)) {
     id = idNumber;
@@ -42,8 +42,8 @@ router.put("/grade", async function (req, res) {
     if (foundGrade === null) {
       res.send("Debe existir el curso para poder actualizarlo");
     } else {
-      const name = nameNumber.toString();
-      await foundGrade.update({ name });
+      const gradeCode = nameNumber.toString();
+      await foundGrade.update({ gradeCode });
       res.json(foundGrade);
     }
   }
