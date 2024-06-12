@@ -1,16 +1,16 @@
 const express = require("express");
-const { group, grade } = require("../model/index.js");
+const db = require("../models/index.js");
 
 const router = express.Router();
 router.get("/group/:id", async function (req, res) {
   const id = req.params.id;
-  const foundGroup = await group.findOne({ where: { groupCode: id } });
+  const foundGroup = await db.group.findOne({ where: { groupCode: id } });
   if (foundGroup === null) {
     res.send("El grupo no existe");
   } else res.json(foundGroup);
 });
 router.get("/group", async function (req, res) {
-  const foundGroup = await group.findAll();
+  const foundGroup = await db.group.findAll();
   //si el arra foundGroup no tiene nada no responde segun lo esperado
   if (!foundGroup || foundGroup.length === 0) {
     res.send("No existen grupos");
@@ -22,7 +22,7 @@ router.post("/group", async function (req, res) {
   try {
     if (!isNaN(groupCode) && !isNaN(gradeId) && nameCoordinator != "") {
       const id = gradeId.toString();
-      const foundGrade = await grade.findOne({ where: { name: id } });
+      const foundGrade = await db.grade.findOne({ where: { name: id } });
       //ESTA TOMANDO EL 1 COMO VALIDO PERO NO ESTA
       //CONSOLE LOG
       console.log(foundGrade);
@@ -31,7 +31,7 @@ router.post("/group", async function (req, res) {
       } else {
         groupCode = groupCode.toString();
         console.log("Ingreso");
-        const [newGroup, succes] = await group.findOrCreate({
+        const [newGroup, succes] = await db.group.findOrCreate({
           where: { groupCode, nameCoordinator, gradeId },
         });
         console.log("estado de findOrCreate");
@@ -59,7 +59,7 @@ router.put("/group/:id", async function (req, res) {
   const DATA = req.body;
   console.log(DATA);
   try {
-    const foundGroup = await group.findOne({ where: { groupCode: id } });
+    const foundGroup = await db.group.findOne({ where: { groupCode: id } });
     if (foundGroup === null) {
       return res.send("El grupo no existe");
     }
@@ -75,7 +75,7 @@ router.put("/group/:id", async function (req, res) {
 router.delete("/group/:id", async function (req, res) {
   const id = req.params.id;
   try {
-    const deletedGroup = await group.destroy({ where: { groupCode: id } });
+    const deletedGroup = await db.group.destroy({ where: { groupCode: id } });
     if (!deletedGroup) {
       return res.send("El grupo no existe");
     }

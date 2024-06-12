@@ -1,71 +1,80 @@
 const express = require("express");
-const grade = require("../model/grade.js");
+const validator = require("validator");
+const db = require("../models/index.js");
 const router = express.Router();
 router.get("/grade/:id", async function (req, res) {
   //Validar que si es un dato que pueda ser un numero valido
   const id = req.params.id;
-  const foundGrade = await grade.findOne({ where: { gradeCode: id } });
-  if (foundGrade === null) {
-    res.send("El grado no existe");
-  } else res.json(foundGrade);
+  if (validator.isInt(id)) {
+    const foundGrade = await db.grade.findOne({ where: { gradeCode: id } });
+    if (foundGrade === null) {
+      return res.send("El grado no existe");
+    } else {
+      return res.json(foundGrade);
+    }
+  } else {
+    return res.send({ msg: "El id no es id valido" });
+  }
 });
 router.get("/grade", async function (req, res) {
-  const foundGrade = await grade.findAll();
+  const foundGrade = await db.grade.findAll();
   if (!foundGrade || foundGrade.length == 0) {
     res.send("No existen grados");
   } else res.json(foundGrade);
 });
 router.post("/grade", async function (req, res) {
   const num = parseInt(req.body.gradeCode);
-  console.log(!isNaN(num));
   if (!isNaN(num) && num >= 0 && num <= 11) {
     const gradeCode = num.toString();
     console.log("Ingreso");
-    const [newGrade, succes] = await grade.findOrCreate({
+    const [newGrade, succes] = await db.grade.findOrCreate({
       where: { gradeCode },
     });
+    console.log(succes);
     if (succes) {
-      res.sendStatus(204);
-    } else res.send("El grado ya existe");
+      console.log("Si ingreso a succes en if");
+      return res.sendStatus(204);
+    } else {
+      console.log("ingreso al else");
+      return res.send("El grado ya existe");
+    }
   } else {
-    res.send("Se espera que digite un numero");
+    return res.status(400).send("Se espera que digite un numero");
   }
 });
-router.put("/grade", async function (req, res) {
-  let { id, gradeCode } = req.body;
-  const idNumber = parseInt(id);
-  const nameNumber = parseInt(gradeCode);
-
-  if (!isNaN(id) && !isNaN(nameNumber)) {
-    id = idNumber;
-    const foundGrade = await grade.findOne({ where: { id } });
+router.put("/grade/:id", async function (req, res) {
+  const gradeCode = req.body.gradeCode.toString();
+  if (validator.isInt(req.params.id.toString()) && validator.isInt(gradeCode)) {
+    const id = parseInt(req.params.id);
+    const foundGrade = await db.grade.findOne({ where: { id } });
     if (foundGrade === null) {
-      res.send("Debe existir el curso para poder actualizarlo");
+      return res
+        .send("Debe existir el curso para poder actualizarlo")
+        .status(404);
     } else {
-      const gradeCode = nameNumber.toString();
       await foundGrade.update({ gradeCode });
       res.json(foundGrade);
     }
   }
-
-  //Validar que si se actualiza debe ser por un grado que aun no este
 });
 router.delete("/grade/:id", async function (req, res) {
-  const id = parseInt(req.params.id);
-  if (!isNaN(id)) {
-    const foundGrade = await grade.findOne({ where: { id } });
+  try {
+    const id = parseInt(req.params.id);
+    console.log(id);
+    const foundGrade = await db.grade.findOne({ where: { id } });
     if (foundGrade === null) {
-      res.send("No se encontro un grado que existente para eliminar");
+      return res.send("No se encontro un grado que existente para eliminar");
     } else {
-      await grade.destroy({
+      await db.grade.destroy({
         where: {
           id,
         },
       });
-      res.sendStatus(204);
+      return res.sendStatus(204);
     }
-  } else {
-    res.send("El id del grado no existe");
+  } catch (error) {
+    console.log(error);
+    res.status(404);
   }
 });
 

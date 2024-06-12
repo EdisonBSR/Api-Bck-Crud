@@ -1,11 +1,12 @@
 const express = require("express");
-const student = require("../model/student.js");
+const db = require("../models/index.js");
+const validator = require("validator");
 const router = express.Router();
 // Ruta para obtener un estudiante por su dni
 router.get("/student/:dni", async (req, res) => {
   const { dni } = req.params;
   try {
-    const foundStudent = await student.findByPk(dni);
+    const foundStudent = await db.student.findByPk(dni);
     if (!foundStudent) {
       return res.send("Estudiante no encontrado.");
     }
@@ -16,7 +17,11 @@ router.get("/student/:dni", async (req, res) => {
   }
 });
 router.get("/student", async (req, res) => {
-  const foundStudent = await student.findAll();
+  //
+
+  // console.log(validator.isInt("3507777973", [{ max: 10 }]));
+  //
+  const foundStudent = await db.student.findAll();
   console.log(foundStudent);
   if (!foundStudent || foundStudent.length === 0) {
     return res.send("No existen estudiantes");
@@ -26,8 +31,13 @@ router.get("/student", async (req, res) => {
 });
 router.post("/student", async (req, res) => {
   const data = req.body;
+  // isInt(req.body.phone, [{ max: 99 }]);
+  if (validator.isEmail(req.body.email)) {
+    console.log("si es correo");
+    validator.isInt("3507777973", [{ max: 10 }]);
+  }
   try {
-    const newStudent = await student.create(data);
+    const newStudent = await db.student.create(data);
     res.status(201).json(newStudent);
   } catch (error) {
     console.error(error);
@@ -38,12 +48,12 @@ router.put("/student/:dni", async (req, res) => {
   const dni = req.params.dni;
   const data = req.body;
   try {
-    const foundStudent = await student.findOne({ where: { dni } });
+    const foundStudent = await db.student.findOne({ where: { dni } });
     console.log(foundStudent);
     if (foundStudent === null) {
       return res.send("Debe existir el estudiante para poder actualizarlo");
     } else {
-      const updateStudent = await student.update(data, {
+      const updateStudent = await db.student.update(data, {
         where: { dni: dni },
       });
       return res.send(updateStudent);
@@ -57,7 +67,7 @@ router.put("/student/:dni", async (req, res) => {
 router.delete("/student/:dni", async (req, res) => {
   const { dni } = req.params;
   try {
-    const deleted = await student.destroy({
+    const deleted = await db.student.destroy({
       where: { dni: dni },
     });
     console.log(!deleted);
