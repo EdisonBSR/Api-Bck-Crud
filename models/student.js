@@ -3,7 +3,14 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class student extends Model {
     static associate(models) {
-      student.belongsTo(models.group, { foreignKey: "idGroup" });
+      student.belongsTo(models.group, {
+        // onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+        foreignKey: {
+          name: "idGroup",
+          allowNull: false,
+        },
+      });
     }
   }
   student.init(

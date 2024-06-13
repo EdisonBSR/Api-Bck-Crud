@@ -3,7 +3,7 @@ const db = require("../models/index.js");
 const validator = require("validator");
 const router = express.Router();
 router.get("/student/:dni", async (req, res) => {
-  const { dni } = req.params;
+  const dni = req.params.dni.trim();
   try {
     const foundStudent = await db.student.findByPk(dni);
     if (!foundStudent) {
@@ -32,7 +32,7 @@ router.post("/student", async (req, res) => {
   let dni = "";
   Object.entries(data).forEach(([key, value]) => {
     if (key == "dni") {
-      value = typeof value == "string" ? value : value.toString();
+      value = typeof value == "string" ? value.trim() : value.toString().trim();
       if (validator.isInt(value)) {
         dataStudent[key] = value;
         dni = value;
@@ -41,14 +41,15 @@ router.post("/student", async (req, res) => {
           "No ha ingresado un numero de documento valido, ingrese solo numeros de enteros (0,1,2,3..). ");
       }
     } else if (key == "firsName" || key == "lastName") {
-      if (validator.isAlpha(key)) {
+      value = value.trim();
+      if (validator.isAlpha(value)) {
         dataStudent[key] = value;
       } else {
         return (msg +=
           "El nombre o apellido contiene caracteres especiales, ingrese el nombre solo usando letras");
       }
     } else if (key == "phone") {
-      value = typeof value == "string" ? value : value.toString();
+      value = typeof value == "string" ? value.trim() : value.toString().trim();
       if (
         validator.isMobilePhone(value) &&
         validator.isLength(value, { min: 10, max: 10 })
@@ -59,14 +60,14 @@ router.post("/student", async (req, res) => {
           "El numero ingresado no es valido o son mas de 10 numeros");
       }
     } else if (key == "email") {
-      value = typeof value == "string" ? value : value.toString();
+      value = typeof value == "string" ? value.trim() : value.toString().trim();
       if (validator.isEmail(value)) {
         dataStudent[key] = value;
       } else {
         return (msg += "No ha ingresado un correo electronico valido");
       }
     } else if (key == "idGroup") {
-      value = typeof value == "string" ? value : value.toString();
+      value = typeof value == "string" ? value.trim() : value.toString().trim();
       idGroup = value;
       dataStudent[key] = value;
     }

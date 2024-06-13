@@ -3,8 +3,22 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class group extends Model {
     static associate(models) {
-      group.hasMany(models.student, { foreignKey: "idGroup" });
-      group.belongsTo(models.grade, { foreignKey: "idGrade" });
+      group.hasMany(models.student, {
+        // onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+        foreignKey: {
+          name: "idGroup",
+          allowNull: false,
+        },
+      });
+      group.belongsTo(models.grade, {
+        // onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+        foreignKey: {
+          name: "idGrade",
+          allowNull: false,
+        },
+      });
     }
   }
   group.init(
@@ -12,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       groupCode: {
         type: DataTypes.STRING,
         primaryKey: true,
-        allowNull: true,
+        allowNull: false,
       },
       coordinator: {
         type: DataTypes.STRING,

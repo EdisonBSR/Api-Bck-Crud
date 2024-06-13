@@ -3,7 +3,14 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class grade extends Model {
     static associate(models) {
-      grade.hasOne(models.group, { foreignKey: "idGrade" });
+      grade.hasOne(models.group, {
+        // onDelete: "CASCADE",
+        onUpdate: "CASCADE",
+        foreignKey: {
+          name: "idGrade",
+          allowNull: false,
+        },
+      });
     }
   }
   grade.init(
