@@ -1,13 +1,18 @@
 const express = require("express");
 const db = require("../models/index.js");
-
 const router = express.Router();
+const validator = require("validator");
 router.get("/group/:id", async function (req, res) {
-  const id = req.params.id;
-  const foundGroup = await db.group.findOne({ where: { groupCode: id } });
-  if (foundGroup === null) {
-    res.send("El grupo no existe");
-  } else res.json(foundGroup);
+  // console.log(validator.isInt(id));
+  if (validator.isInt(req.params.id)) {
+    const id = parseInt(req.params.id);
+    const foundGroup = await db.group.findOne({ where: { groupCode: id } });
+    if (foundGroup === null) {
+      res.send("El grupo no existe");
+    } else res.json(foundGroup);
+  } else {
+    return res.send("El id no es un numero ");
+  }
 });
 router.get("/group", async function (req, res) {
   const foundGroup = await db.group.findAll();
@@ -17,14 +22,15 @@ router.get("/group", async function (req, res) {
   } else res.json(foundGroup);
 });
 router.post("/group", async function (req, res) {
-  let { groupCode, nameCoordinator, gradeId } = req.body;
-  //Se queda en un error al no tener fk valida, validar que el grado exista
+  let { groupCode, coordinator, gradeId } = req.body;
+  console.log(!isNaN(groupCode));
+  console.log(!isNaN(gradeId));
+  console.log(groupCode);
+  console.log("no escribe ");
   try {
-    if (!isNaN(groupCode) && !isNaN(gradeId) && nameCoordinator != "") {
-      const id = gradeId.toString();
-      const foundGrade = await db.grade.findOne({ where: { name: id } });
-      //ESTA TOMANDO EL 1 COMO VALIDO PERO NO ESTA
-      //CONSOLE LOG
+    if (!isNaN(groupCode) && !isNaN(gradeId) && coordinator != "") {
+      const id = parseInt(gradeId);
+      const foundGrade = await db.grade.findOne({ where: { id: id } });
       console.log(foundGrade);
       if (foundGrade === null) {
         return res.send("El grado ingresado no existe");
@@ -32,7 +38,7 @@ router.post("/group", async function (req, res) {
         groupCode = groupCode.toString();
         console.log("Ingreso");
         const [newGroup, succes] = await db.group.findOrCreate({
-          where: { groupCode, nameCoordinator, gradeId },
+          where: { groupCode, coordinator, gradeId },
         });
         console.log("estado de findOrCreate");
         console.log(succes);
@@ -40,12 +46,12 @@ router.post("/group", async function (req, res) {
           console.log(succes);
           return res.sendStatus(200);
         } else {
-          return res.send("El grupo ya existe");
+          return res.send("El grupo ya fue asignado a un grado");
         }
       }
     } else {
       return res.send(
-        "Se espera que digite un numero de grupo, el nombre del director de grupo y el grado al que pertenece"
+        "Se espera que digite un numero de grupo, el nombre del director de grupo y el grado al que pertenece que tambien un numero"
       );
     }
   } catch (error) {
@@ -55,16 +61,70 @@ router.post("/group", async function (req, res) {
 });
 router.put("/group/:id", async function (req, res) {
   const id = req.params.id;
-
   const DATA = req.body;
+  let foundGroup;
+  let updateData = {};
+  let n = 0;
+  let msg = "";
   console.log(DATA);
+  Object.entries(DATA).forEach(([key, value]) => {
+    n++;
+    console.log(n);
+    if (key == "groupCode") {
+      if (typeof value == "string") {
+        if (validator.isInt(value)) {
+          updateData[key] = value;
+        } else {
+          msg += "El codigo de grupo no es un numero. ";
+          return;
+        }
+      } else {
+        if (validator.isInt(value.toString())) {
+          updateData[key] = value.toString();
+        } else {
+          msg += "El codigo de grupo no es un numero. ";
+          return;
+        }
+      }
+    } else if (key == "coordinator") {
+      if (validator.isAlpha(value)) {
+        updateData[key] = value;
+      } else {
+        msg += "El nombre de cordinador solo debe contener letras. ";
+        return;
+      }
+    } else if (key == "gradeId") {
+      if (typeof value == "string") {
+        if (validator.isInt(value)) {
+          updateData[key] = value;
+        } else {
+          msg += "El codigo de grado no es un numero. ";
+          return;
+        }
+      } else {
+        if (validator.isInt(value.toString())) {
+          updateData[key] = value;
+        } else {
+          msg = "El codigo de grado no es un numero. ";
+          return;
+        }
+      }
+    }
+  });
+  console.log(updateData);
+  if (msg != "") {
+    return res.send(msg);
+  }
   try {
-    const foundGroup = await db.group.findOne({ where: { groupCode: id } });
+    if (validator.isInt(id)) {
+      foundGroup = await db.group.findOne({ where: { groupCode: id } });
+    } else {
+      return res.send("El grado no es un numero");
+    }
     if (foundGroup === null) {
       return res.send("El grupo no existe");
     }
-
-    const updatedGroup = await foundGroup.update(DATA);
+    const updatedGroup = await foundGroup.update(updateData);
     res.json(updatedGroup);
   } catch (error) {
     console.error(error);
@@ -74,6 +134,7 @@ router.put("/group/:id", async function (req, res) {
 
 router.delete("/group/:id", async function (req, res) {
   const id = req.params.id;
+  //Poner el caso en que sea por body validarlo
   try {
     const deletedGroup = await db.group.destroy({ where: { groupCode: id } });
     if (!deletedGroup) {
