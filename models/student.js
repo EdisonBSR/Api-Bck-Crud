@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      student.belongsTo(models.group);
+      student.belongsTo(models.group, { foreignKey: "idGroup" });
     }
   }
   student.init(
@@ -22,6 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       firsName: { type: DataTypes.STRING, allowNull: false },
       lastName: { type: DataTypes.STRING, allowNull: false },
       phone: { type: DataTypes.STRING, allowNull: false },
+      email: { type: DataTypes.STRING, allowNull: false },
     },
     {
       sequelize,

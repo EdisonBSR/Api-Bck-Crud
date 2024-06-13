@@ -3,10 +3,10 @@ const db = require("../models/index.js");
 const router = express.Router();
 const validator = require("validator");
 router.get("/group/:id", async function (req, res) {
-  console.log(validator.isInt(req.params.id));
-  if (validator.isInt(req.params.id)) {
-    const id = req.params.id;
-    const foundGroup = await db.group.findOne({ where: { groupCode: id } });
+  const id =
+    typeof req.params.id == "string" ? req.params.id : req.params.id.toString();
+  if (validator.isInt(id)) {
+    const foundGroup = await db.group.findByPk(id);
     if (foundGroup === null) {
       return res.send("El grupo no existe");
     } else return res.json(foundGroup);
@@ -22,37 +22,27 @@ router.get("/group", async function (req, res) {
   } else res.json(foundGroup);
 });
 router.post("/group", async function (req, res) {
-  let { groupCode, coordinator, gradeId } = req.body;
-  console.log(!isNaN(groupCode));
-  console.log(!isNaN(gradeId));
-  console.log(groupCode);
-  console.log("no escribe ");
-  // !isNaN(groupCode) && !isNaN(gradeId) && coordinator != ""
+  let { groupCode, coordinator, idGrade } = req.body;
   groupCode = typeof groupCode == "string" ? groupCode : groupCode.toString();
   coordinator =
     typeof coordinator == "string" ? coordinator : coordinator.toString();
-  gradeId = typeof gradeId == "string" ? gradeId : gradeId.toString();
+  idGrade = typeof idGrade == "string" ? idGrade : idGrade.toString();
 
   try {
     if (
       validator.isInt(groupCode) &&
-      validator.isInt(gradeId) &&
+      validator.isInt(idGrade) &&
       validator.isAlpha(coordinator)
     ) {
-      const foundGrade = await db.grade.findOne({
-        where: { gradeCode: gradeId },
-      });
+      const foundGrade = await db.grade.findByPk(idGrade);
       console.log(foundGrade);
       if (foundGrade === null) {
         return res.send("El grado ingresado no existe");
       } else {
-        console.log("Ingreso");
-        gradeId = parseInt(gradeId);
         const [newGroup, succes] = await db.group.findOrCreate({
-          where: { groupCode, coordinator, gradeId },
+          where: { groupCode, coordinator, idGrade },
         });
-        console.log("estado de findOrCreate");
-        console.log(succes);
+        console.log("estado de findOrCreate: ", succes);
         if (succes) {
           console.log(succes);
           return res.sendStatus(200);
@@ -71,13 +61,14 @@ router.post("/group", async function (req, res) {
   }
 });
 router.put("/group/:id", async function (req, res) {
-  const id = req.params.id;
+  const id =
+    typeof req.params.id == "string" ? req.params.id : req.params.id.toString();
   const { ...DATA } = req.body;
   let foundGroup;
   let updateData = {};
   let n = 0;
   let msg = "";
-  // console.log(typeof DATA);
+
   Object.entries(DATA).forEach(([key, value]) => {
     n++;
     console.log(n);
@@ -104,7 +95,7 @@ router.put("/group/:id", async function (req, res) {
         msg += "El nombre de cordinador solo debe contener letras. ";
         return;
       }
-    } else if (key == "gradeId") {
+    } else if (key == "idGrade") {
       if (typeof value == "string") {
         if (validator.isInt(value)) {
           updateData[key] = value;
@@ -128,7 +119,7 @@ router.put("/group/:id", async function (req, res) {
   }
   try {
     if (validator.isInt(id)) {
-      foundGroup = await db.group.findOne({ where: { groupCode: id } });
+      foundGroup = await db.group.findByPk(id);
     } else {
       return res.send("El grado no es un numero");
     }
@@ -148,7 +139,7 @@ router.delete("/group/:id", async function (req, res) {
     typeof req.params.id == "string" ? req.params.id : req.params.id.toString();
   try {
     if (validator.isInt(id)) {
-      const foundGroup = await db.group.findOne({ where: { groupCode: id } });
+      const foundGroup = await db.group.findByPk(id);
       // console.log(foundGroup == null);
       if (foundGroup == null) {
         return res.send("El grupo no existe");

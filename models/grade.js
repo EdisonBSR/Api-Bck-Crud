@@ -8,19 +8,16 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
-      grade.hasOne(models.group);
+      grade.hasOne(models.group, { foreignKey: "idGrade" });
     }
   }
   grade.init(
     {
-      id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+      gradeCode: {
+        type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
       },
-      gradeCode: { type: DataTypes.STRING, allowNull: false },
     },
     {
       sequelize,

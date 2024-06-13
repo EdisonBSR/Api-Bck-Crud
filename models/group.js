@@ -9,20 +9,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      group.hasMany(models.student);
-      group.belongsTo(models.grade);
+      group.hasMany(models.student, { foreignKey: "idGroup" });
+      group.belongsTo(models.grade, { foreignKey: "idGrade" });
     }
   }
   group.init(
     {
-      id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-        allowNull: true,
-      },
       groupCode: {
         type: DataTypes.STRING,
+        primaryKey: true,
         allowNull: true,
       },
       coordinator: {
