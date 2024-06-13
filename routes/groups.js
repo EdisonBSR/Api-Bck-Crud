@@ -3,13 +3,13 @@ const db = require("../models/index.js");
 const router = express.Router();
 const validator = require("validator");
 router.get("/group/:id", async function (req, res) {
-  // console.log(validator.isInt(id));
+  console.log(validator.isInt(req.params.id));
   if (validator.isInt(req.params.id)) {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     const foundGroup = await db.group.findOne({ where: { groupCode: id } });
     if (foundGroup === null) {
-      res.send("El grupo no existe");
-    } else res.json(foundGroup);
+      return res.send("El grupo no existe");
+    } else return res.json(foundGroup);
   } else {
     return res.send("El id no es un numero ");
   }
@@ -27,16 +27,27 @@ router.post("/group", async function (req, res) {
   console.log(!isNaN(gradeId));
   console.log(groupCode);
   console.log("no escribe ");
+  // !isNaN(groupCode) && !isNaN(gradeId) && coordinator != ""
+  groupCode = typeof groupCode == "string" ? groupCode : groupCode.toString();
+  coordinator =
+    typeof coordinator == "string" ? coordinator : coordinator.toString();
+  gradeId = typeof gradeId == "string" ? gradeId : gradeId.toString();
+
   try {
-    if (!isNaN(groupCode) && !isNaN(gradeId) && coordinator != "") {
-      const id = parseInt(gradeId);
-      const foundGrade = await db.grade.findOne({ where: { id: id } });
+    if (
+      validator.isInt(groupCode) &&
+      validator.isInt(gradeId) &&
+      validator.isAlpha(coordinator)
+    ) {
+      const foundGrade = await db.grade.findOne({
+        where: { gradeCode: gradeId },
+      });
       console.log(foundGrade);
       if (foundGrade === null) {
         return res.send("El grado ingresado no existe");
       } else {
-        groupCode = groupCode.toString();
         console.log("Ingreso");
+        gradeId = parseInt(gradeId);
         const [newGroup, succes] = await db.group.findOrCreate({
           where: { groupCode, coordinator, gradeId },
         });
@@ -61,12 +72,12 @@ router.post("/group", async function (req, res) {
 });
 router.put("/group/:id", async function (req, res) {
   const id = req.params.id;
-  const DATA = req.body;
+  const { ...DATA } = req.body;
   let foundGroup;
   let updateData = {};
   let n = 0;
   let msg = "";
-  console.log(DATA);
+  // console.log(typeof DATA);
   Object.entries(DATA).forEach(([key, value]) => {
     n++;
     console.log(n);
@@ -133,14 +144,19 @@ router.put("/group/:id", async function (req, res) {
 });
 
 router.delete("/group/:id", async function (req, res) {
-  const id = req.params.id;
-  //Poner el caso en que sea por body validarlo
+  const id =
+    typeof req.params.id == "string" ? req.params.id : req.params.id.toString();
   try {
-    const deletedGroup = await db.group.destroy({ where: { groupCode: id } });
-    if (!deletedGroup) {
-      return res.send("El grupo no existe");
-    }
-    res.send("Grupo eliminado exitosamente");
+    if (validator.isInt(id)) {
+      const foundGroup = await db.group.findOne({ where: { groupCode: id } });
+      // console.log(foundGroup == null);
+      if (foundGroup == null) {
+        return res.send("El grupo no existe");
+      } else {
+        await foundGroup.destroy();
+        return res.send("Grupo eliminado exitosamente");
+      }
+    } else res.send("No se ha ingresado un valor valido");
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
