@@ -41,7 +41,7 @@ router.post("/grade", async function (req, res) {
       return res.send("El grado ya existe");
     }
   } else {
-    return res.status(400).send("Se espera que digite un numero");
+    return res.status(400).send("Se espera que digite un numero menor de 11");
   }
 });
 router.put("/grade/:id", async function (req, res) {
