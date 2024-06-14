@@ -118,7 +118,7 @@ router.put("/student/:dni", async (req, res) => {
           dataStudent[key] = value;
         } else {
           return (msg +=
-            "El nombre o apellido contiene caracteres especiales, ingrese el nombre solo usando letras");
+            "El nombre o apellido contiene numeros o caracteres especiales, ingrese el nombre solo usando letras");
         }
       } else if (key == "phone") {
         value = typeof value == "string" ? value : value.toString();

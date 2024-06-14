@@ -24,7 +24,8 @@ router.get("/group", async function (req, res) {
   } else res.json(foundGroup);
 });
 router.post("/group", async function (req, res) {
-  let { groupCode, coordinator, idGrade } = req.body;
+  let { id, groupCode, coordinator, idGrade } = req.body;
+  id = typeof id == "string" ? id.trim() : id.toString().trim();
   groupCode =
     typeof groupCode == "string"
       ? groupCode.trim()
@@ -38,29 +39,43 @@ router.post("/group", async function (req, res) {
 
   try {
     if (
-      validator.isInt(groupCode) &&
+      validator.isInt(id) &&
+      validator.isAlpha(groupCode) &&
       validator.isInt(idGrade) &&
       validator.isAlpha(coordinator)
     ) {
       const foundGrade = await db.grade.findByPk(idGrade);
       console.log(foundGrade);
       if (foundGrade === null) {
-        return res.send("El grado ingresado no existe");
+        return res.status(404).send("El grado ingresado no existe");
       } else {
         const [newGroup, succes] = await db.group.findOrCreate({
-          where: { groupCode, coordinator, idGrade },
+          where: { groupCode, idGrade },
+          defaults: {
+            id,
+            groupCode,
+            coordinator,
+            idGrade,
+          },
         });
         if (succes) {
           console.log(succes);
           return res.sendStatus(200);
         } else {
-          return res.send("El grupo ya existe");
+          const grade = await newGroup.getGrade().then((response) => {
+            return `${response.gradeCode}`;
+          });
+          return res.send(
+            `El grupo ${groupCode} del grado ${grade} ya existe `
+          );
         }
       }
     } else {
-      return res.send(
-        "Se espera que digite un numero de grupo, el nombre del director de grupo y el grado al que pertenece que tambien un numero"
-      );
+      return res
+        .status(400)
+        .send(
+          "Se espera que digite un numero de grupo, el nombre del grupo sin numeros, el nombre del director de grupo y el grado al que pertenece que tambien un numero"
+        );
     }
   } catch (error) {
     console.log(error);
@@ -83,17 +98,17 @@ router.put("/group/:id", async function (req, res) {
     console.log(n);
     if (key == "groupCode") {
       if (typeof value == "string") {
-        if (validator.isInt(value.trim())) {
+        if (validator.isAlpha(value.trim())) {
           updateData[key] = value.trim();
         } else {
           msg += "El codigo de grupo no es un numero. ";
           return;
         }
       } else {
-        if (validator.isInt(value.toString().trim())) {
+        if (validator.isAlpha(value.toString().trim())) {
           updateData[key] = value.toString().trim();
         } else {
-          msg += "El codigo de grupo no es un numero. ";
+          msg += "El codigo de grupo no es un nombre en letras is numeros. ";
           return;
         }
       }
@@ -124,7 +139,7 @@ router.put("/group/:id", async function (req, res) {
   });
   console.log(updateData);
   if (msg != "") {
-    return res.send(msg);
+    return res.status(400).send(msg);
   }
   try {
     if (validator.isInt(id)) {

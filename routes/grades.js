@@ -1,15 +1,16 @@
 const express = require("express");
 const validator = require("validator");
 const db = require("../models/index.js");
+const { where } = require("sequelize");
 const router = express.Router();
 router.get("/grade/:id", async function (req, res) {
-  let gradeCode = req.params.id;
-  gradeCode =
-    typeof gradeCode == "string"
-      ? gradeCode.trim()
-      : gradeCode.toString().trim();
-  if (validator.isInt(gradeCode)) {
-    const foundGrade = await db.grade.findByPk(gradeCode);
+  const id =
+    typeof req.params.id == "string"
+      ? req.params.id.trim()
+      : req.params.id.toString().trim();
+
+  if (validator.isInt(id)) {
+    const foundGrade = await db.grade.findByPk(id);
     if (foundGrade === null) {
       return res.send("El grado no existe");
     } else {
@@ -26,25 +27,41 @@ router.get("/grade", async function (req, res) {
   } else res.json(foundGrade);
 });
 router.post("/grade", async function (req, res) {
-  const num = parseInt(req.body.gradeCode);
+  const id =
+    typeof req.body.id == "string"
+      ? req.body.id.trim()
+      : req.body.id.toString().trim();
   const gradeCode =
     typeof req.body.gradeCode == "string"
-      ? req.body.gradeCode.trim().trim()
+      ? req.body.gradeCode.trim()
       : req.body.gradeCode.toString().trim();
-  if (validator.isInt(gradeCode) && num >= 0 && num <= 11) {
-    const [newGrade, succes] = await db.grade.findOrCreate({
-      where: { gradeCode },
-    });
-    console.log(succes);
-    if (succes) {
-      console.log("Si ingreso a succes en if");
-      return res.sendStatus(201);
+  console.log(validator.isAlpha(gradeCode));
+  if (validator.isInt(id) && parseInt(id) >= 0 && parseInt(id) <= 11) {
+    if (validator.isAlpha(gradeCode)) {
+      const [newGrade, succes] = await db.grade.findOrCreate({
+        where: { id },
+        defaults: {
+          id,
+          gradeCode,
+        },
+      });
+      console.log(succes);
+      if (succes) {
+        console.log("Si ingreso a succes en if");
+        return res.sendStatus(201);
+      } else {
+        console.log("ingreso al else");
+        return res.send("El grado ya existe");
+      }
     } else {
-      console.log("ingreso al else");
-      return res.send("El grado ya existe");
+      return res.send("Se espera que ingrese un nombre de grado");
     }
   } else {
-    return res.status(400).send("Se espera que digite un numero menor de 11");
+    return res
+      .status(400)
+      .send(
+        "Se espera que digite un numero de 0 hasta 11, correspondiente al grado"
+      );
   }
 });
 router.put("/grade/:id", async function (req, res) {
@@ -56,28 +73,24 @@ router.put("/grade/:id", async function (req, res) {
     typeof req.body.gradeCode == "string"
       ? req.body.gradeCode.trim()
       : req.body.gradeCode.toString().trim();
-  if (validator.isInt(gradeCode) && validator.isInt(id)) {
+  if (validator.isAlpha(gradeCode) && validator.isInt(id)) {
     const foundGrade = await db.grade.findByPk(id);
     if (foundGrade === null) {
       return res
         .send("Debe existir el curso para poder actualizarlo")
         .status(404);
     } else {
-      const foundExist = await db.grade.findByPk(gradeCode);
-      console.log(foundExist);
-      if (foundExist == null) {
-        await foundGrade.destroy();
-        console.log(gradeCode);
-        const updateGrade = await db.grade.create({ gradeCode: gradeCode });
-        return res.json(updateGrade);
-      } else {
-        res.send(
-          "Por el grado que pensaba actualizar ya existe, no fue posible realizar el cambio"
-        );
-      }
+      foundGrade.set({
+        gradeCode,
+      });
+      foundGrade.save();
+      // console.log(foundGrade);
+      res.json(foundGrade);
     }
   } else {
-    return res.send("Se espera los los datos sean numeros");
+    return res.send(
+      "Se espera que ingrese solo letras o un dato numero para el grado "
+    );
   }
 });
 router.delete("/grade/:id", async function (req, res) {
@@ -86,20 +99,18 @@ router.delete("/grade/:id", async function (req, res) {
       typeof req.params.id == "string"
         ? req.params.id.trim()
         : req.params.id.toString().trim();
-    console.log(typeof id);
-    const foundGrade = await db.grade.findByPk(id);
-    console.log(foundGrade == null);
-    if (foundGrade === null) {
+    const deletedGrade = await db.grade.destroy({ where: { id } });
+    console.log(deletedGrade);
+    if (deletedGrade == 0) {
       return res
-        .send("No se encontro un grado que existente para eliminar")
-        .status(404);
+        .status(404)
+        .send("No se encontro un grado que existente para eliminar");
     } else {
-      await foundGrade.destroy();
       return res.sendStatus(204);
     }
   } catch (error) {
     console.log(error);
-    res.status(404);
+    res.status(500);
   }
 });
 

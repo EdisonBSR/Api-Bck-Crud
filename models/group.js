@@ -23,9 +23,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   group.init(
     {
-      groupCode: {
+      id: {
         type: DataTypes.STRING,
         primaryKey: true,
+        allowNull: false,
+      },
+      groupCode: {
+        type: DataTypes.STRING,
         allowNull: false,
       },
       coordinator: {

@@ -15,10 +15,14 @@ module.exports = (sequelize, DataTypes) => {
   }
   grade.init(
     {
-      gradeCode: {
+      id: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
+      },
+      gradeCode: {
+        type: DataTypes.STRING,
+        allowNull: false,
       },
     },
     {
