@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(studentRouter);
 app.use(groupRouter);
 app.use(gradeRouter);
-app.listen(3000, function () {
+app.listen(3000, () => {
   db.sequelize.sync({ force: false }).then(() => {
     console.log("Conexion sequelize completada");
   });
